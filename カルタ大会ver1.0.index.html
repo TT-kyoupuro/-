@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="ja">
+<!--前書き-->
+<!--このサイトに侵入した人へ-->
+<!--ADMINのところのパスワードは、現在最もパソコンに適応した数を高度な微積を利用して暗号化しています-->
+<!--暗号化技術も使っているので、おそらく突破不可能です-->
+<!--もし突破できたなら、私たちの負けです-->
+<!--もう煮るなり焼くなり好き勝手にしてください-->
+<!--まあたぶん無理だけどネ-->
+<!--やれるもんならやってみ-->
+
+<!--追記--->
+<!--条件分岐のところ（入力されたのが不正だったら）イジるのだけは本当にやめて。ルール違反だから-->
+<!--まじでやめろよ？-->
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karuta Rating System</title>
+  <!-- Chart.js（グラフ描画用ライブラリ） -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1f2937;
+      --border: #e5e7eb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 56px;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.5px;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-button {
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4b5563;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-button:hover {
+      background-color: #f3f4f6;
+      color: #111827;
+    }
+
+    .nav-button.active {
+      color: var(--primary);
+      background-color: #eff6ff;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 10px;
+      color: #111827;
+    }
+
+    .card-header-with-search {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card-header-with-search h2 {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 200px;
+    }
+
+    .search-box input {
+      padding: 8px 12px;
+      padding-left: 32px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background-color: #f9fafb;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .rank-1, .rank-2, .rank-3, .rank-4, .rank-5, .rank-6, .rank-7 {
+      background-color: #fff4f4;
+    }
+    .rank-8, .rank-9, .rank-10, .rank-11, .rank-12, .rank-13, .rank-14 {
+      background-color: #f7fcfe;
+    }
+    .rank-15, .rank-16, .rank-17, .rank-18, .rank-19, .rank-20, .rank-21 {
+      background-color: #f0fff0;
+    }
+    .rank-22, .rank-23, .rank-24, .rank-25, .rank-26, .rank-27, .rank-28 {
+      background-color: #ffffe5;
+    }
+    .rank-29, .rank-30, .rank-31, .rank-32, .rank-33, .rank-34, .rank-35 {
+      background-color: #f4eaff;
+    }
+    .rank-36, .rank-37, .rank-38, .rank-39, .rank-40, .rank-41 {
+      background-color: #f1f5f9;
+    }
+    
+    .player-link {
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .player-link:hover {
+      text-decoration: underline;
+    }
+
+    .team-badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      color: white;
+      font-size: 0.75rem;
+    }
+
+    .team-A { background-color: #ef4444; }
+    .team-B { background-color: #3b82f6; }
+    .team-C { background-color: #10b981; }
+    .team-D { background-color: #f59e0b; }
+    .team-E { background-color: #8b5cf6; }
+    .team-F { background-color: #64748b; }
+    
+    /* チームカラーテキスト用 */
+    .team-text-A { color: #dc2626; }
+    .team-text-B { color: #2563eb; }
+    .team-text-C { color: #059669; }
+    .team-text-D { color: #d97706; }
+    .team-text-E { color: #7c3aed; }
+    .team-text-F { color: #475569; }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 0.95rem;
+    }
+
+    .player-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .player-row select { flex: 2; }
+    .player-row input { flex: 1; }
+
+    .btn-submit {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      width: 100%;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    .btn-danger {
+      background-color: #dc2626;
+      margin-top: 20px;
+    }
+
+    .btn-submit:hover { opacity: 0.9; }
+
+    .error-msg {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* 管理者認証画面レイアウト */
+    .auth-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    .auth-card {
+      width: 100%;
+      margin: 0 !important;
+    }
+
+    /* モーダル（ポップアップ）CSS */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #9ca3af;
+    }
+
+    .modal-close:hover { color: #111827; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .stat-item {
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    @media (max-width: 768px) {
+      .card-header-with-search {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .search-box {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="logo">🂠 KarutaContest</div>
+      <ul class="nav-links">
+        <li><button id="btn-ranking" class="nav-button active" onclick="switchTab('ranking')">RANKING</button></li>
+        <li><button id="btn-admin" class="nav-button" onclick="switchTab('admin')">ADMIN 🔒</button></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. RANKING -->
+    <div id="tab-ranking" class="tab-content active">
+      <div class="card">
+        <h2>🚩 チーム別平均レート</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>順位</th>
+              <th>チーム</th>
+              <th>人数</th>
+              <th>平均レート</th>
+            </tr>
+          </thead>
+          <tbody id="teamRankingBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header-with-search">
+          <h2>🏆 個人レートランキング</h2>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchPlayer" placeholder="生徒名で検索..." oninput="updateIndividualRanking()">
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>順位</th>
+              <th>氏名</th>
+              <th>チーム</th>
+              <th>レート</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. ADMIN AUTH -->
+    <div id="tab-admin-auth" class="tab-content">
+      <div class="auth-wrapper">
+        <div class="card auth-card">
+          <h2>🔒 管理者ログイン</h2>
+          <p style="font-size: 0.875rem; color: #6b7280;">結果入力・設定変更には管理者パスワードが必要です。</p>
+          <div class="form-group">
+            <label for="editPassword">パスワード</label>
+            <input type="password" id="editPassword" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter') authenticateAdmin()">
+          </div>
+          <div id="authErrorMsg" class="error-msg"></div>
+          <button type="button" class="btn-submit" onclick="authenticateAdmin()">ロック解除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ADMIN PANEL -->
+    <div id="tab-admin" class="tab-content">
+      <div class="card">
+        <h2>⚔️ 試合結果の入力</h2>
+        <div class="form-group">
+          <label for="playerCountSelect">対戦卓の人数</label>
+          <select id="playerCountSelect" onchange="createInputFields(parseInt(this.value))">
+            <option value="7">7人卓</option>
+            <option value="6" selected>6人卓</option>
+          </select>
+        </div>
+
+        <label>対戦メンバー選択と獲得枚数入力（合計100枚）</label>
+        <div id="playerInputs"></div>
+
+        <div id="errorMsg" class="error-msg"></div>
+        <button type="button" class="btn-submit" onclick="submitMatch()">計算を実行してレート更新</button>
+      </div>
+
+      <div class="card">
+        <h2>⚙️ メンバー追加</h2>
+        <div class="form-group">
+          <label for="newPlayerName">生徒の氏名</label>
+          <input type="text" id="newPlayerName" placeholder="例: かるた新一">
+        </div>
+        <button type="button" class="btn-submit" onclick="addPlayer()">新しい生徒を追加</button>
+      </div>
+
+      <div class="card">
+        <h2>⚠️ データリセット</h2>
+        <button type="button" class="btn-submit btn-danger" onclick="resetToDefault()">全データを初期（41名・レート0）に戻す</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 個別スタッツモーダル (AtCoder風) -->
+  <div id="playerModal" class="modal-overlay" onclick="closePlayerModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closePlayerModal()">×</button>
+      <h2 id="modalPlayerName" style="border:none; margin-bottom: 4px;">-</h2>
+      <div id="modalPlayerTeam" style="margin-bottom: 12px;">-</div>
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">現在順位</div>
+          <div class="stat-value" id="modalRank">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">現在 Rate</div>
+          <div class="stat-value" id="modalRate">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Highest Rate</div>
+          <div class="stat-value" id="modalHighestRate">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Highest Perf.</div>
+          <div class="stat-value" id="modalHighestPerf">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">対戦数</div>
+          <div class="stat-value" id="modalMatches">-</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px;">📈 Rating History</h3>
+      <div style="position: relative; height:220px; width:100%">
+        <canvas id="rateChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const CONFIG = { 
+    ALPHA: 0.15, 
+    K_FACTOR: 40, 
+    TOTAL_CARDS: 100
+  };
+
+  let isAdminUnlocked = false;
+  let chartInstance = null;
+
+  const defaultPlayers = [
+    { id: 1, name: "愛川 裕士", team: "A", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 2, name: "青木 康介", team: "A", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 3, name: "赤塚 智", team: "A", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 4, name: "安齋 碩毅", team: "A", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 5, name: "安東 重一", team: "A", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 6, name: "石川 航也", team: "A", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 7, name: "伊知地 剛太郎", team: "A", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 8, name: "上原 大空", team: "B", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 9, name: "大村 航士", team: "B", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 10, name: "川口 諒大", team: "B", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 11, name: "木田 理人", team: "B", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 12, name: "木村 一郎", team: "B", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 13, name: "後上 耕太郎", team: "B", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 14, name: "小林 昌樹", team: "B", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 15, name: "田澤 英知", team: "C", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 16, name: "田中 康太", team: "C", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 17, name: "田中 知弥", team: "C", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 18, name: "谷川 竜太郎", team: "C", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 19, name: "長岡 亜龍", team: "C", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 20, name: "中谷 陽", team: "C", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 21, name: "中西 大志", team: "C", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 22, name: "名畑 大貴", team: "D", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 23, name: "仁木 嶺", team: "D", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 24, name: "白 翔太", team: "D", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 25, name: "橋本 侑", team: "D", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 26, name: "橋本 航成", team: "D", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 27, name: "馬場 皓⼰", team: "D", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 28, name: "針本 幸太郎", team: "D", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 29, name: "眞城 竜輝", team: "E", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 30, name: "宮尾 梛々⼈ ", team: "E", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 31, name: "宮城 龍希", team: "E", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 32, name: "宮嶋 拓海", team: "E", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 33, name: "ムーア 海音 オリバー", team: "E", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 34, name: "牟田 穣", team: "E", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 35, name: "森 翔", team: "E", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 36, name: "矢野 真之", team: "F", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 37, name: "八幡 侑聖", team: "F", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 38, name: "山中 直弥", team: "F", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 39, name: "横山 大成", team: "F", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 40, name: "吉冨 碧介", team: "F", rate: 0, highestRate: 0, highestPerf: 0, history: [0] },
+    { id: 41, name: "渡辺 隆太", team: "F", rate: 0, highestRate: 0, highestPerf: 0, history: [0] }
+  ];
+
+  let players = JSON.parse(localStorage.getItem('karuta_players')) || defaultPlayers;
+
+  players.forEach(p => {
+    if (!p.history) p.history = [p.rate];
+    if (p.highestRate === undefined) p.highestRate = p.rate;
+    if (p.highestPerf === undefined) p.highestPerf = p.rate;
+  });
+
+  window.onload = () => {
+    reassignTeamsByRanking();
+    createInputFields(6);
+    updateAllTables();
+  };
+
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-button').forEach(el => el.classList.remove('active'));
+    
+    if (tabName === 'admin') {
+      document.getElementById('btn-admin').classList.add('active');
+      if (isAdminUnlocked) {
+        document.getElementById('tab-admin').classList.add('active');
+      } else {
+        document.getElementById('tab-admin-auth').classList.add('active');
+      }
+    } else {
+      isAdminUnlocked = false;
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      document.getElementById(`btn-${tabName}`).classList.add('active');
+    }
+  }
+
+  // --- 完全難読化・微積分＆不可逆暗号認証 ---
+  async function authenticateAdmin() {
+    const inputEl = document.getElementById('editPassword');
+    const authErrorMsg = document.getElementById('authErrorMsg');
+    const inputPass = inputEl ? inputEl.value.trim() : '';
+
+    if (!inputPass) {
+      authErrorMsg.textContent = 'WA (Null Input): パスワードを入力してください。';
+      authErrorMsg.style.display = 'block';
+      return;
+    }
+
+    // 数値 998244353 をコード上に書かず、ビット演算で動的生成 (2^23 * 119 + 1)
+    const MOD = ((1n << 23n) * 119n) + 1n;
+    
+    let seed = 0n;
+    try {
+      for (let i = 0; i < inputPass.length; i++) {
+        seed = (seed * 131n + BigInt(inputPass.charCodeAt(i))) % MOD;
+      }
+    } catch (e) {
+      seed = 0n;
+    }
+
+    // 微分演算（テイラー展開の2次近似）
+    const f = (x) => (x**3n + 7n*(x**2n) + 13n*x + 42n) % MOD;
+    const df = (x) => (3n*(x**2n) + 14n*x + 13n) % MOD;
+    const d2f = (x) => (6n*x + 14n) % MOD;
+
+    const calculusSignature = (f(seed) + df(seed) + d2f(seed)) % MOD;
+
+    // ソルトの結合とSHA-256ハッシュ化
+    const saltedPayload = `SALT_ENV_${calculusSignature.toString()}_${inputPass}`;
+    
+    const encoder = new TextEncoder();
+    const data = encoder.encode(saltedPayload);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // 暗号化された正解ハッシュ値（文字としてのヒントは完全ゼロ）
+    const TARGET_HASH = "64f49f04793bf6b10d1431f171b8e25b3cc2cd07752521e1ce4a2e70e8d1a0db";
+
+    if (computedHash === TARGET_HASH) {
+      isAdminUnlocked = true;
+      authErrorMsg.style.display = 'none';
+      inputEl.value = '';
+      switchTab('admin');
+    } else {
+      authErrorMsg.innerHTML = `WA (Wrong Answer): 認証エラー。<br><small style="font-size:0.75rem; color:#9ca3af;">[Integrity Check Failed]</small>`;
+      authErrorMsg.style.display = 'block';
+      inputEl.value = '';
+    }
+  }
+
+  function reassignTeamsByRanking() {
+    players.sort((a, b) => b.rate - a.rate);
+
+    const teams = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const total = players.length;
+    const baseGroupSize = Math.floor(total / teams.length);
+    const remainder = total % teams.length;
+
+    let currentIdx = 0;
+    teams.forEach((teamName, i) => {
+      const size = baseGroupSize + (i < remainder ? 1 : 0);
+      for (let j = 0; j < size; j++) {
+        if (currentIdx < total) {
+          players[currentIdx].team = teamName;
+          currentIdx++;
+        }
+      }
+    });
+  }
+
+  function createInputFields(count) {
+    const container = document.getElementById('playerInputs');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    for (let i = 0; i < count; i++) {
+      const row = document.createElement('div');
+      row.className = 'player-row';
+      
+      let options = players.map(p => `<option value="${p.id}">${p.name}（${p.team}チーム / Rate:${p.rate}）</option>`).join('');
+      
+      row.innerHTML = `
+        <select class="match-player">${options}</select>
+        <input type="number" class="match-score" placeholder="獲得枚数" min="0" max="100">
+      `;
+      container.appendChild(row);
+    }
+  }
+
+  function submitMatch() {
+    const playerSelects = document.querySelectorAll('.match-player');
+    const scoreInputs = document.querySelectorAll('.match-score');
+    const errorMsg = document.getElementById('errorMsg');
+    
+    if (errorMsg) errorMsg.style.display = 'none';
+
+    let matchData = [];
+    let totalScore = 0;
+
+    for (let i = 0; i < playerSelects.length; i++) {
+      const pId = parseInt(playerSelects[i].value);
+      const score = parseInt(scoreInputs[i].value) || 0;
+      const player = players.find(p => p.id === pId);
+
+      if (!player) continue;
+
+      matchData.push({ player, score });
+      totalScore += score;
+    }
+
+    if (totalScore !== CONFIG.TOTAL_CARDS) {
+      if (errorMsg) {
+        errorMsg.textContent = `枚数の合計が ${totalScore} 枚になっています。合計が 100 枚になるように入力してください。`;
+        errorMsg.style.display = 'block';
+      }
+      return;
+    }
+
+    const n = matchData.length;
+    if (n === 0) return;
+
+    const tableAvgRate = matchData.reduce((sum, m) => sum + m.player.rate, 0) / n;
+    const baseCards = CONFIG.TOTAL_CARDS / n;
+
+ matchData.forEach(m => {
+      const player = m.player;
+      
+      // パフォーマンス履歴・Perfの配列構造を保証
+      if (!player.perfHistory) player.perfHistory = [];
+
+      // --- 1. Target Performance 計算 ---
+      // 今回の試合単体の実力値 (Perf)
+      const rawPerf = Math.round(1000 + tableAvgRate * 0.2 + (m.score - baseCards) * CONFIG.K_FACTOR);
+      const targetPerf = Math.max(0, rawPerf);
+      player.perfHistory.push(targetPerf);
+
+      const k = player.perfHistory.length; // 参戦回数
+
+      // --- 2. AtCoder公式: パフォーマンスの指数加重平均 (R_raw) ---
+      let S = 0;
+      let G = 0;
+      for (let i = 0; i < k; i++) {
+        const weight = Math.pow(0.9, k - 1 - i);
+        S += weight;
+        G += weight * Math.pow(2, player.perfHistory[i] / 800);
+      }
+      const R_raw = 800 * Math.log2(G / S);
+
+      // --- 3. AtCoder公式: 参加回数補正関数 f(k) ---
+      // 試合数が少ないうちは表示レートを大きく下方補正する
+      const f_k = Math.sqrt(1 - Math.pow(0.81, k)) / S;
+      const R_calc = R_raw - (f_k * 1200);
+
+      // --- 4. AtCoder公式: 400未満の対数補正 ＆ 0未満ガード ---
+      let displayRate = 0;
+      if (R_calc >= 400) {
+        displayRate = Math.round(R_calc);
+      } else {
+        // 400未満の領域では指数的に下落が滑らかになり、絶対に0未満にならない
+        displayRate = Math.round(400 / Math.exp((400 - R_calc) / 400));
+      }
+
+      player.rate = Math.max(0, displayRate);
+      
+      // 履歴データ保存 (perf も一緒に記録)
+      player.history.push({
+        rate: player.rate,
+        perf: targetPerf,
+        score: m.score,
+        team: player.team
+      });
+      
+      // Highest 記録の更新
+      if (player.highestRate === undefined || player.rate > player.highestRate) {
+        player.highestRate = player.rate;
+      }
+      if (player.highestPerf === undefined || targetPerf > player.highestPerf) {
+        player.highestPerf = targetPerf;
+      }
+    });
+    reassignTeamsByRanking();
+    saveData();
+    updateAllTables();
+    createInputFields(parseInt(document.getElementById('playerCountSelect').value));
+
+    alert("レート計算とチーム再編が完了しました！");
+    switchTab('ranking');
+  }
+
+  function addPlayer() {
+    const nameInput = document.getElementById('newPlayerName');
+    
+    if (!nameInput || !nameInput.value.trim()) {
+      alert("氏名を入力してください");
+      return;
+    }
+
+    const newPlayer = {
+      id: Date.now(),
+      name: nameInput.value.trim(),
+      team: "F",
+      rate: 0,
+      highestRate: 0,
+      highestPerf: 0,
+      history: [0]
+    };
+
+    players.push(newPlayer);
+    reassignTeamsByRanking();
+    saveData();
+    createInputFields(parseInt(document.getElementById('playerCountSelect').value));
+    updateAllTables();
+    
+    nameInput.value = '';
+    alert(`${newPlayer.name} を追加しました！`);
+    switchTab('ranking');
+  }
+
+  function resetToDefault() {
+    if (confirm("本当に全員のレートとデータを最初の41名の状態（一律レート0）に戻しますか？")) {
+      players = defaultPlayers;
+      reassignTeamsByRanking();
+      saveData();
+      createInputFields(6);
+      updateAllTables();
+      alert("データを初期化しました。");
+      switchTab('ranking');
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem('karuta_players', JSON.stringify(players));
+  }
+
+  function updateAllTables() {
+    updateIndividualRanking();
+    updateTeamRanking();
+  }
+
+  function updateIndividualRanking() {
+    const tbody = document.getElementById('rankingBody');
+    const searchInput = document.getElementById('searchPlayer');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    let matchCount = 0;
+    players.forEach((p, index) => {
+      const cleanName = p.name.replace(/\s+/g, '').toLowerCase();
+      const cleanQuery = query.replace(/\s+/g, '');
+
+      if (cleanQuery === '' || cleanName.includes(cleanQuery)) {
+        matchCount++;
+        const tr = document.createElement('tr');
+        if (index < 41) {
+          tr.className = `rank-${index + 1}`;
+        }
+        
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td><span class="player-link team-text-${p.team}" onclick="openPlayerModal(${p.id})">${p.name}</span></td>
+          <td><span class="team-badge team-${p.team}">${p.team}チーム</span></td>
+          <td><strong>${p.rate}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+
+    if (matchCount === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="4" style="color: #6b7280; padding: 20px;">該当する生徒が見つかりません</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function updateTeamRanking() {
+    const tbody = document.getElementById('teamRankingBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const teams = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const teamStats = teams.map(teamName => {
+      const teamMembers = players.filter(p => p.team === teamName);
+      const count = teamMembers.length;
+      const totalRate = teamMembers.reduce((sum, p) => sum + p.rate, 0);
+      const avgRate = count > 0 ? Math.round(totalRate / count) : 0;
+      return { team: teamName, count, avgRate };
+    });
+
+    teamStats.sort((a, b) => b.avgRate - a.avgRate);
+
+    teamStats.forEach((t, index) => {
+      const tr = document.createElement('tr');
+      if (index === 0) tr.className = 'rank-1';
+      else if (index === 1) tr.className = 'rank-2';
+      else if (index === 2) tr.className = 'rank-3';
+
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td><span class="team-badge team-${t.team}">${t.team}チーム</span></td>
+        <td>${t.count}名</td>
+        <td><strong>${t.avgRate}</strong></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openPlayerModal(playerId) {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const rank = players.findIndex(p => p.id === playerId) + 1;
+
+    document.getElementById('modalPlayerName').textContent = player.name;
+    document.getElementById('modalPlayerTeam').innerHTML = `<span class="team-badge team-${player.team}">${player.team}チーム</span>`;
+    document.getElementById('modalRank').textContent = `${rank} 位`;
+    document.getElementById('modalRate').textContent = player.rate;
+    document.getElementById('modalHighestRate').textContent = player.highestRate !== undefined ? player.highestRate : player.rate;
+    document.getElementById('modalHighestPerf').textContent = player.highestPerf !== undefined ? player.highestPerf : player.rate;
+    document.getElementById('modalMatches').textContent = `${player.history ? player.history.length - 1 : 0} 回`;
+
+    document.getElementById('playerModal').classList.add('active');
+
+    renderChart(player.history || [player.rate]);
+  }
+
+  function closePlayerModal(e) {
+    if (e && e.target !== e.currentTarget && !e.target.classList.contains('modal-close')) return;
+    document.getElementById('playerModal').classList.remove('active');
+  }
+
+function renderChart(history) {
+    const ctx = document.getElementById('rateChart').getContext('2d');
+    
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    const normalizedHistory = history.map(h => typeof h === 'object' ? h : { rate: h, perf: null, score: null, team: null });
+    const rates = normalizedHistory.map(h => h.rate);
+    const labels = normalizedHistory.map((_, i) => i === 0 ? "初期" : `第${i}戦`);
+
+    const teamBackgroundPlugin = {
+      id: 'teamBackground',
+      beforeDraw(chart) {
+        const { ctx, chartArea: { top, bottom, left, right }, scales: { y } } = chart;
+        if (!y) return;
+
+        const teamBands = [
+          { team: 'A', color: 'rgba(239, 68, 68, 0.15)' },
+          { team: 'B', color: 'rgba(59, 130, 246, 0.15)' },
+          { team: 'C', color: 'rgba(16, 185, 129, 0.15)' },
+          { team: 'D', color: 'rgba(245, 158, 11, 0.15)' },
+          { team: 'E', color: 'rgba(139, 92, 246, 0.15)' },
+          { team: 'F', color: 'rgba(100, 116, 139, 0.15)' }
+        ];
+
+        const teams = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const ranges = {};
+
+        teams.forEach(t => {
+          const members = players.filter(p => p.team === t);
+          if (members.length > 0) {
+            const rList = members.map(p => p.rate);
+            ranges[t] = {
+              max: Math.max(...rList),
+              min: Math.min(...rList)
+            };
+          }
+        });
+
+        teamBands.forEach(b => {
+          const range = ranges[b.team];
+          if (!range) return;
+
+          const yTop = Math.max(top, y.getPixelForValue(range.max));
+          const yBottom = Math.min(bottom, y.getPixelForValue(range.min));
+
+          if (yBottom > yTop) {
+            ctx.save();
+            ctx.fillStyle = b.color;
+            ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+            ctx.restore();
+          }
+        });
+      }
+    };
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Rating',
+          data: rates,
+          borderColor: '#1a73e8',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#1a73e8'
+        }]
+      },
+      plugins: [teamBackgroundPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const index = context.dataIndex;
+                const item = normalizedHistory[index];
+                const rateVal = context.parsed.y;
+                
+                if (index === 0) {
+                  return ` Rate: ${rateVal} (初期状態)`;
+                }
+                
+                const perfText = item.perf !== null ? item.perf : '-';
+                const scoreText = item.score !== null ? `${item.score}枚` : '不明';
+                const teamText = item.team ? `${item.team}チーム` : '-';
+                
+                return [
+                  ` Rate: ${rateVal}`,
+                  ` Perf: ${perfText}`,
+                  ` 獲得枚数: ${scoreText}`,
+                  ` 当時所属: ${teamText}`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#e5e7eb' },
+            ticks: { font: { size: 11 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
